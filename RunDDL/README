@@ -1,0 +1,13 @@
+To run the program, please follow the steps listed below
+
+1. in the current direcotry, run command ". compile.sh", this will start connection with Derby Database
+	a. running this file will promopt for two files
+		i. derby installtion location, for exmaple: /Users/mzou/Documents/UHM/derby/Apache/
+		ii. Java installation location, for exmaple: /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home/
+2. after proper directories are inputted, derbyclient will be listening in port 1527
+3. openn a new terminal window or tab
+4. in the same project directory, type in command ". run.sh $1 $2"
+	a. $1 is the first argument that prompt for configure file, in the same directory, I have the config file named clustercfg.cfg
+	b. $2 is the second argument that promopt for ddlfile, in the same direcotry, I have the ddl file named ddlfile.sql
+
+After inputting correct file, the program will run, and the output should tell the user whether the file is be successfully executed.
