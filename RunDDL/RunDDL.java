@@ -16,18 +16,18 @@ public class RunDDL {
     private static String connUser = null;
     private static String connPwd = null;
     private static List<ClusterInfo> list = new ArrayList<ClusterInfo>();
+
     //jdbc:derby://localhost:1527/testing
     public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
-       
+
         /* ************* MAIN PROGRAM **************/
         RunDDL dt = new RunDDL();
         ClusterInfo node = new ClusterInfo();
 
-        
         //Read clustercfg.cfg and insert into dtable
         dt.readCfg(args[0]);
         Thread[] tList = new Thread[nthreads];
-        
+
         String ddlFile = args[1];
 
         for (int i = 0; i < nthreads; i++) {
@@ -40,8 +40,6 @@ public class RunDDL {
         for (int ij = 0; ij < nthreads; ij++) {
             tList[ij].join();
         }
-        
-        
 
     }
 
@@ -107,7 +105,7 @@ public class RunDDL {
     }
 
     private void insertNode(String conDriver, String conUrl, String conUser, String conPwd,
-        String driver, String url, String userName, String password, int id) {
+            String driver, String url, String userName, String password, int id) {
         Connection conn = null;
         try {
             Class.forName(conDriver).newInstance();
@@ -136,52 +134,34 @@ public class RunDDL {
         String status = null;
         try {
             Class.forName(driver).newInstance();
-            //conn = DriverManager.getConnection(url, userName, password);
             conn = DriverManager.getConnection(url + ";create=true", userName, password);
-            //System.out.println("Connected to the database");
-
-            String query = "DROP TABLE ICS421.DTABLES";
-            Statement stmt = null;
-            
-            try {
-                stmt = conn.createStatement();
-                stmt.executeUpdate(query);
-            } catch (SQLException e) {
-                if (tableAlreadyExists(e)) {
-                    return;
-                }
-            } finally {
-                query = "CREATE TABLE ICS421.DTABLES(tname char(32), \n"
-                        + "   nodedriver char(64), \n"
-                        + "   nodeurl char(128), \n"
-                        + "   nodeuser char(16), \n"
-                        + "   nodepasswd char(16), \n"
-                        + "   partmtd int, \n"
-                        + "   nodeid int, \n"
-                        + "   partcol char(32), \n"
-                        + "   partparam1 char(32),\n"
-                        + "   partparam2 char(32))";
-                stmt = conn.createStatement();
-                stmt.executeUpdate(query);
-                PreparedStatement pstmt;
-                pstmt = conn.prepareStatement("INSERT INTO ICS421.DTABLES (NODEDRIVER, NODEURL, NODEUSER, NODEPASSWD, NODEID) VALUES (?, ?, ?, ?, ?)");
-                pstmt.setString(1, driver);
-                pstmt.setString(2, url);
-                pstmt.setString(3, userName);
-                pstmt.setString(4, password);
-                pstmt.setInt(5, 0);
-                pstmt.executeUpdate();
-                status = "updated";
-            }
-            
-            stmt.close();
-            conn.close();
-            //System.out.println("Disconnected from database");
+            Statement stmt;
+            String tableName = url.substring(url.lastIndexOf('/') + 1).trim();
+            String query = "CREATE TABLE ICS421.DTABLES(tname char(32), \n"
+                    + "   nodedriver char(64), \n"
+                    + "   nodeurl char(128), \n"
+                    + "   nodeuser char(16), \n"
+                    + "   nodepasswd char(16), \n"
+                    + "   partmtd int, \n"
+                    + "   nodeid int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 0, INCREMENT BY 1), \n"
+                    + "   partcol char(32), \n"
+                    + "   partparam1 char(32),\n"
+                    + "   partparam2 char(32))";
+            stmt = conn.createStatement();
+            stmt.executeUpdate(query);
+            PreparedStatement pstmt;
+            pstmt = conn.prepareStatement("INSERT INTO ICS421.DTABLES (NODEDRIVER, NODEURL, NODEUSER, NODEPASSWD, TNAME) VALUES (?, ?, ?, ?, ?)");
+            pstmt.setString(1, driver);
+            pstmt.setString(2, url);
+            pstmt.setString(3, userName);
+            pstmt.setString(4, password);
+            pstmt.setString(5, tableName);
+            pstmt.executeUpdate();
+            status = "Catalog Node Updated";
         } catch (Exception e) {
-            e.printStackTrace();
-            status = "update failed";
+            status = "Catalog Node Update Failed, " + e.getMessage();
         } finally {
-            System.out.println("[" + inputUrl + "]: catalog " + status + ".");
+            System.out.println("[" + url + "]: " + status + ".");
         }
     }
 
@@ -220,7 +200,7 @@ public class RunDDL {
                 Class.forName(driver).newInstance();
                 conn = DriverManager.getConnection(inputUrl + ";create=true", userName, password);
                 //System.out.println("Connected to the database " + inputUrl);
-                
+
                 /*
                 query = "DROP TABLE BOOKS";
                 try {
@@ -231,22 +211,19 @@ public class RunDDL {
                         return;
                     }
                 }
-                */
-                
+                 */
                 BufferedReader br = new BufferedReader(new FileReader(ddl));
-                
+
                 while ((lines = br.readLine()) != null) {
                     line.append(lines);
                 }
-                if(line.lastIndexOf(";") > -1){
+                if (line.lastIndexOf(";") > -1) {
                     line.deleteCharAt(line.lastIndexOf(";"));
                 }
                 //System.out.println(line);
                 query = line.toString();
                 stmt = conn.createStatement();
                 stmt.executeUpdate(query);
-                
-
 
                 status = "success";
                 conn.close();
@@ -255,7 +232,7 @@ public class RunDDL {
                 status = "failed";
                 return;
             } finally {
-                System.out.println("[" + inputUrl + "]: " + ddl + " " +  status + ".");
+                System.out.println("[" + inputUrl + "]: " + ddl + " " + status + ".");
             }
         }
 
@@ -273,7 +250,5 @@ public class RunDDL {
             this.ConnectToDerby(inputDriver, inputUrl, inputUserName, inputPassword);
         }
     }
-
-    
 
 }

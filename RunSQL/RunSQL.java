@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RunSQL {
 
@@ -21,7 +23,6 @@ public class RunSQL {
         RunSQL run = new RunSQL();
         run.updateCatalog("/Users/mzou/NetBeansProjects/RunSQL/src/clustercfg.cfg");
         run.getClusterNodes();
-
         Thread[] threads = new Thread[nthreads];
         for (int i = 0; i < nthreads; i++) {
             String driver = clusterList.get(i).getNodedriver();
@@ -39,9 +40,8 @@ public class RunSQL {
                     String path = "/Users/mzou/NetBeansProjects/RunSQL/src/sqlfile.sql";
                     try {
                         Class.forName(driver).newInstance();
-                        conn = DriverManager.getConnection(connUrl, connUser, connPwd);
+                        conn = DriverManager.getConnection(connUrl + "?verifyServerCertificate=false&useSSL=true", connUser, connPwd);
                         BufferedReader br = new BufferedReader(new FileReader(path));
-
                         while ((lines = br.readLine()) != null) {
                             line.append(lines);
                         }
@@ -51,22 +51,31 @@ public class RunSQL {
                         String query = line.toString();
                         PreparedStatement statement = conn
                                 .prepareStatement(query);
-                        resultSet = statement.executeQuery();
-                        while (resultSet.next()) {
-                            String ISBN = resultSet.getString("ISBN");
-                            String Title = resultSet.getString("TITLE");
-                            String Price = resultSet.getString("PRICE");
-                            System.out.println(ISBN + " | " + Title + " | " + Price);
+                        ResultSet rs = statement.executeQuery();
+                        ResultSetMetaData rsmd = rs.getMetaData();
+                        int columnsNumber = rsmd.getColumnCount();
+                        while (rs.next()) {
+                            StringBuilder valueCol = new StringBuilder();
+                            for (int i = 1; i <= columnsNumber; i++) {
+                                String columnValue = rs.getString(i).replaceAll("\\s+", " ");
+                                valueCol.append(columnValue + ", ");
+                            }
+                            valueCol.setLength(valueCol.length() - 2);
+                            System.out.println(valueCol);
                         }
-                        status = path + " success";
-                    } catch (Exception e) {
-                        status = path + "failed, " + e.getMessage();
+                        status = "success";
+                    } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | SQLException e) {
+                        System.err.println(e.getMessage());
+                        status = "failed";
                     } finally {
-                        System.out.println("[" + connUrl + "]: " + status + ".");
+                        System.out.println("[" + connUrl + "]: " + path + " " + status + ".");
                     }
                 }
             });
             threads[i].start();
+        }
+        for (int i = 0; i < nthreads; i++) {
+            threads[i].join();
         }
     }
 
@@ -76,7 +85,8 @@ public class RunSQL {
         String nodeDriver, nodeUrl, nodeUser, nodePasswd;
         try {
             Class.forName(driver).newInstance();
-            conn = DriverManager.getConnection(connUrl, connUser, connPwd);
+            //System.out.println(driver);
+            conn = DriverManager.getConnection(connUrl + "?verifyServerCertificate=false&useSSL=true", connUser, connPwd);
             Statement stmt;
             String query = "SELECT * FROM DTABLES";
             PreparedStatement statement = conn
@@ -100,7 +110,7 @@ public class RunSQL {
             }
             clusterList.remove(0);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
         }
     }
 
@@ -108,7 +118,7 @@ public class RunSQL {
         BufferedReader br = new BufferedReader(new FileReader(filePath));
         Connection conn = null;
         String line = null, driver = null, hostname = null, username = null, passwd = null, tname = null;
-        String catalogDriver = null, catalogHostname = null, catalogUsername = null, catalogPasswd = null, catalogTablename = null;
+        String catalogDriver = null, catalogHostname = null, catalogUsername = null, catalogPasswd = null;
         String status;
         while ((line = br.readLine()) != null) {
             if (line.startsWith("catalog")) {
@@ -120,7 +130,7 @@ public class RunSQL {
                 line = line.substring(line.lastIndexOf('=') + 1).trim();
                 catalogHostname = line;
                 this.connUrl = catalogHostname;
-                catalogTablename = catalogHostname.substring(line.lastIndexOf('/') + 1).trim();
+
                 line = br.readLine();
                 line = line.substring(line.lastIndexOf('=') + 1).trim();
                 catalogUsername = line;
@@ -130,31 +140,38 @@ public class RunSQL {
                 catalogPasswd = line;
                 this.connPwd = catalogPasswd;
                 try {
-                    Class.forName(catalogDriver).newInstance();
-                    conn = DriverManager.getConnection(catalogHostname + ";create=true", catalogUsername, catalogPasswd);
+                    Class.forName(catalogDriver);
+                    conn = DriverManager.getConnection(catalogHostname + "?verifyServerCertificate=false&useSSL=true", catalogUsername, catalogPasswd);
                     Statement stmt;
-                    String query = "CREATE TABLE ICS421.DTABLES(tname char(32), \n"
+                    String query = "CREATE TABLE IF NOT EXISTS DTABLES (tname char(32), \n"
                             + "   nodedriver char(64), \n"
                             + "   nodeurl char(128), \n"
                             + "   nodeuser char(16), \n"
                             + "   nodepasswd char(16), \n"
                             + "   partmtd int, \n"
-                            + "   nodeid int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 0, INCREMENT BY 1), \n"
+                            + "   nodeid int NOT NULL AUTO_INCREMENT, \n"
                             + "   partcol char(32), \n"
                             + "   partparam1 char(32),\n"
-                            + "   partparam2 char(32))";
+                            + "   partparam2 char(32), \n" 
+                            + "   PRIMARY KEY (nodeid))";
                     stmt = conn.createStatement();
                     stmt.executeUpdate(query);
-                    PreparedStatement pstmt;
-                    pstmt = conn.prepareStatement("INSERT INTO ICS421.DTABLES (NODEDRIVER, NODEURL, NODEUSER, NODEPASSWD, TNAME) VALUES (?, ?, ?, ?, ?)");
-                    pstmt.setString(1, catalogDriver);
-                    pstmt.setString(2, catalogHostname);
-                    pstmt.setString(3, catalogUsername);
-                    pstmt.setString(4, catalogPasswd);
-                    pstmt.setString(5, catalogTablename);
-                    pstmt.executeUpdate();
-                    status = "Catalog Node Updated";
-                } catch (Exception e) {
+                    
+                    ResultSet rs = stmt.executeQuery("SELECT * FROM DTABLES WHERE NODEURL='" + catalogHostname +"'");
+                    if(rs.next()){
+                        status = "Catalog Node Already Existed";
+                    }
+                    else {
+                        PreparedStatement pstmt;
+                        pstmt = conn.prepareStatement("INSERT INTO DTABLES (NODEDRIVER, NODEURL, NODEUSER, NODEPASSWD) VALUES (?, ?, ?, ?)");
+                        pstmt.setString(1, catalogDriver);
+                        pstmt.setString(2, catalogHostname);
+                        pstmt.setString(3, catalogUsername);
+                        pstmt.setString(4, catalogPasswd);
+                        pstmt.executeUpdate();
+                        status = "Catalog Node Updated";
+                    }
+                } catch (ClassNotFoundException | SQLException e) {
                     status = "Catalog Node Update Failed, " + e.getMessage();
                 } finally {
                     System.out.println("[" + catalogHostname + "]: " + status + ".");
@@ -174,7 +191,6 @@ public class RunSQL {
                 line = br.readLine();
                 line = line.substring(line.lastIndexOf('=') + 1).trim();
                 hostname = line;
-                tname = hostname.substring(line.lastIndexOf('/') + 1).trim();
                 line = br.readLine();
                 line = line.substring(line.lastIndexOf('=') + 1).trim();
                 username = line;
@@ -200,31 +216,23 @@ public class RunSQL {
                     }
                     if (existed == false) {
                         PreparedStatement pstmt;
-                        pstmt = conn.prepareStatement("INSERT INTO ICS421.DTABLES (NODEDRIVER, NODEURL, NODEUSER, NODEPASSWD, TNAME) VALUES (?, ?, ?, ?, ?)");
+                        pstmt = conn.prepareStatement("INSERT INTO DTABLES (NODEDRIVER, NODEURL, NODEUSER, NODEPASSWD) VALUES (?, ?, ?, ?)");
                         pstmt.setString(1, driver);
                         pstmt.setString(2, hostname);
                         pstmt.setString(3, username);
                         pstmt.setString(4, passwd);
-                        pstmt.setString(5, tname);
                         pstmt.executeUpdate();
                         status = "Cluster Node Added";
                     } else {
                         status = "Cluster Node Update Failed";
                     }
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     status = "Cluster Node Update Failed, " + e.getMessage();
                 } finally {
-                    //System.out.println("[" + hostname + "]: " + status + ".");
+                    System.out.println("[" + hostname + "]: " + status + ".");
                 }
             }
         }
-        try {
-            if(!conn.isClosed())
-                conn.close();
-        } catch (SQLException e) {
-            System.err.print(e.getMessage());
-        }
-
     }
 
 }
