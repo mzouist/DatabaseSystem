@@ -24,7 +24,7 @@ public class loadCSV {
         Connection conn;
         loadCSV run = new loadCSV();
         ResultSet resultSet;
-        run.updateCatalog("/Users/mzou/NetBeansProjects/LoadCSV/src/clustercfg.cfg");
+        run.updateCatalog(args[0]);
         Thread[] thread = new Thread[nthreads];
         if (partitionMethod.compareToIgnoreCase("range") == 0) {
             int numThread = 0;
@@ -51,11 +51,12 @@ public class loadCSV {
                     thread[numThread] = new Thread(new Runnable() {
                         @Override
                         public void run() {
+                            int count = 0;
                             try {
                                 Connection newConn;
                                 Class.forName(nodeDriver).newInstance();
                                 newConn = DriverManager.getConnection(nodeUrl + "?verifyServerCertificate=false&useSSL=true", nodeUser, nodePwd);
-                                BufferedReader br = new BufferedReader(new FileReader("/Users/mzou/NetBeansProjects/LoadCSV/src/orders.tbl.16m"));
+                                BufferedReader br = new BufferedReader(new FileReader(args[1]));
                                 String line;
                                 String query1 = "SELECT * From " + partitionTable;
                                 PreparedStatement statement = newConn
@@ -75,6 +76,7 @@ public class loadCSV {
                                     }
                                 }
                                 sqlCol.setLength(sqlCol.length() - 2);
+                                System.out.println("[" + nodeUrl + "]: inserting data.");
                                 while ((line = br.readLine()) != null) {
                                     String query;
                                     List<String> stringAry = new ArrayList<String>();
@@ -82,7 +84,7 @@ public class loadCSV {
                                     StringBuilder valueCol = new StringBuilder();
                                     for (int i = 0; i < dataArray.length; i++) {
                                         stringAry.add(dataArray[i]);
-                                        if(rsmd.getColumnType(i + 1) == Types.CHAR){
+                                        if (rsmd.getColumnType(i + 1) == Types.CHAR) {
                                             valueCol.append("'" + dataArray[i] + "', ");
                                         } else if (rsmd.getColumnType(i + 1) == Types.DATE) {
                                             valueCol.append("'" + dataArray[i] + "', ");
@@ -98,6 +100,7 @@ public class loadCSV {
                                                 && Integer.parseInt(stringAry.get(compareCol)) < p2) {
                                             query = "INSERT INTO " + partitionTable + "(" + sqlCol.toString() + ") VALUES ("
                                                     + valueCol.toString() + ")";
+                                            count++;
                                             Statement stmt = newConn.createStatement();
                                             stmt.executeUpdate(query);
                                         }
@@ -110,6 +113,8 @@ public class loadCSV {
                                 newConn.close();
                             } catch (Exception e) {
                                 System.err.println(e.getMessage());
+                            } finally {
+                                System.out.println("[" + nodeUrl + "]: " + count + " rows inserted.");
                             }
                         }
                     });
@@ -119,7 +124,7 @@ public class loadCSV {
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-        } else if(partitionMethod.compareToIgnoreCase("hash") == 0){
+        } else if (partitionMethod.compareToIgnoreCase("hash") == 0) {
             int numThread = 0;
             try {
                 Class.forName(driver).newInstance();
@@ -151,11 +156,12 @@ public class loadCSV {
                     thread2[numThread] = new Thread(new Runnable() {
                         @Override
                         public void run() {
+                            int insertedData = 0;
                             try {
                                 Connection newConn;
                                 Class.forName(nodeDriver).newInstance();
                                 newConn = DriverManager.getConnection(nodeUrl + "?verifyServerCertificate=false&useSSL=true", nodeUser, nodePwd);
-                                BufferedReader br = new BufferedReader(new FileReader("/Users/mzou/NetBeansProjects/LoadCSV/src/orders.tbl.16m"));
+                                BufferedReader br = new BufferedReader(new FileReader(args[1]));
                                 String line;
                                 String query1 = "SELECT * From " + partitionTable;
                                 PreparedStatement statement = newConn
@@ -175,6 +181,7 @@ public class loadCSV {
                                     }
                                 }
                                 sqlCol.setLength(sqlCol.length() - 2);
+                                System.out.println("[" + nodeUrl + "]: inserting data.");
                                 while ((line = br.readLine()) != null) {
                                     String query;
                                     List<String> stringAry = new ArrayList<String>();
@@ -182,7 +189,7 @@ public class loadCSV {
                                     StringBuilder valueCol = new StringBuilder();
                                     for (int i = 0; i < dataArray.length; i++) {
                                         stringAry.add(dataArray[i]);
-                                        if(rsmd.getColumnType(i + 1) == Types.CHAR){
+                                        if (rsmd.getColumnType(i + 1) == Types.CHAR) {
                                             valueCol.append("'" + dataArray[i] + "', ");
                                         } else if (rsmd.getColumnType(i + 1) == Types.DATE) {
                                             valueCol.append("'" + dataArray[i] + "', ");
@@ -198,6 +205,7 @@ public class loadCSV {
                                         if ((nodeId - 1) == (temp + 1)) {
                                             query = "INSERT INTO " + partitionTable + "(" + sqlCol.toString() + ") VALUES ("
                                                     + valueCol.toString() + ")";
+                                            insertedData++;
                                             //System.out.println(query);
                                             //System.out.println(nodeId + ": " + "order_key: " + dataArray[0]);
                                             Statement stmt = newConn.createStatement();
@@ -211,6 +219,8 @@ public class loadCSV {
                                 newConn.close();
                             } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NumberFormatException | SQLException e) {
                                 System.err.println(e.getMessage());
+                            } finally {
+                                System.out.println("[" + nodeUrl + "]: " + insertedData + " rows inserted.");
                             }
                         }
                     });

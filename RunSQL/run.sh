@@ -1,1 +1,1 @@
-java -cp .:mysql-connector-java-5.1.40-bin.jar RunSQL
+java -cp .:mysql-connector-java-5.1.40-bin.jar RunSQL $1 $2

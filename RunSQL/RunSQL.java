@@ -21,7 +21,7 @@ public class RunSQL {
 
     public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
         RunSQL run = new RunSQL();
-        run.updateCatalog("/Users/mzou/NetBeansProjects/RunSQL/src/clustercfg.cfg");
+        run.updateCatalog(args[0]);
         run.getClusterNodes();
         Thread[] threads = new Thread[nthreads];
         for (int i = 0; i < nthreads; i++) {
@@ -37,7 +37,7 @@ public class RunSQL {
                     String lines;
                     String status = null;
                     StringBuilder line = new StringBuilder();
-                    String path = "/Users/mzou/NetBeansProjects/RunSQL/src/sqlfile.sql";
+                    String path = args[1];
                     try {
                         Class.forName(driver).newInstance();
                         conn = DriverManager.getConnection(connUrl + "?verifyServerCertificate=false&useSSL=true", connUser, connPwd);
