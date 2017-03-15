@@ -31,7 +31,6 @@ public class RunSQL2 {
     private static List<String> t4 = new ArrayList<String>();
     private static List<String> t5 = new ArrayList<String>();
     private static List<String> tt1, tt2, tt3, tt4, tt5;
-    private static List<ClusterInfo> clusterList = new ArrayList<ClusterInfo>();
     private static Lock lock = new ReentrantLock();
     private static Condition condVar = lock.newCondition();
 
