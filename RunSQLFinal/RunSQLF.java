@@ -28,6 +28,10 @@ public class RunSQLF {
     private static boolean catalog, numnodes, node, localnode, partition, tablename;
 
     public static void main(String[] args) throws IOException {
+        if(args.length != 2){
+            System.err.println("PLEASE INPUT 2 ARGUMENTS.");
+            System.exit(0);
+        }
         for (int i = 0; i < args.length; i++) {
             //System.out.println(args[i]);
         }
@@ -54,7 +58,7 @@ public class RunSQLF {
                 Runddl.main(inputArgs); // DONE
             } else if (catalog && !numnodes && !node && !localnode && !partition && !tablename) {
                 System.out.println("RUNSQL");
-                RunSQL.main(inputArgs);
+                RunSQL.main(inputArgs); // DONE
             } else if (catalog && !node && !localnode && partition && tablename) {
                 System.out.println("LOADCSV");
                 loadCSV.main(inputArgs); // DONE
