@@ -111,6 +111,10 @@ public class RunSQL2 {
             }
         }
 
+        for(int i = 0 ; i < from.size(); i++){
+            //System.out.println(from.get(i));
+        }
+        
         try {
             String query = "";
             List<String> columnNames = new ArrayList<String>();
@@ -127,7 +131,6 @@ public class RunSQL2 {
                 if (rs.getString("TNAME") != null) {
                     tname = rs.getString("TNAME").replaceAll("\\s+", "");
                     if (tname.equalsIgnoreCase(from.get(0))) {
-                        // TODO: MIGHT NEED TO CHANGE IT FOR DYNAMIC LOAD
                         t1.add(tname);
                         t2.add(rs.getString("NODEDRIVER").replaceAll("\\s+", ""));
                         t3.add(rs.getString("NODEURL").replaceAll("\\s+", ""));
@@ -449,6 +452,8 @@ public class RunSQL2 {
             iconn.close();
         } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | SQLException e) {
             System.err.println(e.getMessage());
+        } catch (IndexOutOfBoundsException e){
+            System.err.println("SQL TABLE DOES NOT EXIST IN DATABASE.");
         }
     }
 
