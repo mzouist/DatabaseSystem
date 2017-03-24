@@ -54,16 +54,16 @@ public class RunSQLF {
 
         try {
             if (catalog && numnodes && node && !localnode && !partition && !tablename) {
-                System.out.println("RUNDDL");
+                //System.out.println("RUNDDL");
                 Runddl.main(inputArgs); // DONE
             } else if (catalog && !numnodes && !node && !localnode && !partition && !tablename) {
-                System.out.println("RUNSQL");
+                //System.out.println("RUNSQL");
                 RunSQL.main(inputArgs); // DONE
             } else if (catalog && !node && !localnode && partition && tablename) {
-                System.out.println("LOADCSV");
+                //System.out.println("LOADCSV");
                 loadCSV.main(inputArgs); // DONE
             } else if (catalog && !numnodes && !node && localnode && !partition && !tablename) {
-                System.out.println("RUNSQL2");
+                //System.out.println("RUNSQL2");
                 RunSQL2.main(inputArgs); // DONE
             }
         } catch (InterruptedException | FileNotFoundException e) {

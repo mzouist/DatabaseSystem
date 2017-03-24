@@ -1,0 +1,4 @@
+#! /bin/bash
+
+mysqladmin -u root -p$1 -D mzou2 -e "SELECT * FROM BOOKS"
+mysqladmin -u root -p$1 -D mzou3 -e "SELECT * FROM BOOKS"

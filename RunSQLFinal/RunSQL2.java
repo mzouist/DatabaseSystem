@@ -43,7 +43,7 @@ public class RunSQL2 {
      */
     public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
         for (int i = 0; i < args.length; i++) {
-            System.out.println(args[i]);
+            //System.out.println(args[i]);
         }
         RunSQL2 r = new RunSQL2();
         r.ReadCatalog(args[0]);
@@ -55,6 +55,7 @@ public class RunSQL2 {
         List<String> where = new ArrayList<String>();
         StringBuilder line = new StringBuilder();
         List<String> colName = new ArrayList<String>();
+        List<String> ttable = new ArrayList<String>();
         String path = args[1];
         tt1 = new ArrayList<String>();
         tt2 = new ArrayList<String>();
@@ -182,9 +183,9 @@ public class RunSQL2 {
                 } else if (rsmd.getColumnType(i) == Types.VARCHAR) {
                     sb.append(name + " VARCHAR(128), ");
                 } else if (rsmd.getColumnType(i) == Types.DATE) {
-                    sb.append(name + " DATETIME, ");
+                    sb.append(name + " DATE, ");
                 } else if (rsmd.getColumnType(i) == Types.DECIMAL) {
-                    sb.append(name + " DECIMAL, ");
+                    sb.append(name + " DECIMAL (15, 2), ");
                 }
             }
             sb1.setLength(sb1.length() - 2);
@@ -223,9 +224,9 @@ public class RunSQL2 {
                 } else if (rsmd.getColumnType(i) == Types.VARCHAR) {
                     sb2.append(name1 + " VARCHAR(128), ");
                 } else if (rsmd.getColumnType(i) == Types.DATE) {
-                    sb2.append(name1 + " DATETIME, ");
+                    sb2.append(name1 + " DATE, ");
                 } else if (rsmd.getColumnType(i) == Types.DECIMAL) {
-                    sb2.append(name1 + " DECIMAL, ");
+                    sb2.append(name1 + " DECIMAL (15, 2), ");
                 }
             }
             sb3.setLength(sb3.length() - 2);
@@ -325,7 +326,7 @@ public class RunSQL2 {
                         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | SQLException e) {
                             System.err.println(e);
                         } finally {
-                            //System.out.println("Done with " + Thread.currentThread());
+                            //System.out.println();
                         }
 
                     }

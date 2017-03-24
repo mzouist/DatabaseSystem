@@ -21,7 +21,7 @@ public class Runddl {
     public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
         
         for(int i = 0; i < args.length; i++){
-            System.out.println(args[i]);
+            //System.out.println(args[i]);
         }
         
         /* ************* MAIN PROGRAM **************/

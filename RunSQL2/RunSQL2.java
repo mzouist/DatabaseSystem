@@ -43,6 +43,12 @@ public class RunSQL2 {
             2) SQL FILE
     */
     public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
+        
+        if(args.length != 2){
+            System.err.println("PLEASE INPUT 2 ARGUMENTS!");
+            System.exit(0);
+        }
+        
         RunSQL2 r = new RunSQL2();
         r.ReadCatalog(args[0]);
         String lines;
@@ -180,9 +186,9 @@ public class RunSQL2 {
                 } else if (rsmd.getColumnType(i) == Types.VARCHAR) {
                     sb.append(name + " VARCHAR(128), ");
                 } else if (rsmd.getColumnType(i) == Types.DATE) {
-                    sb.append(name + " DATETIME, ");
+                    sb.append(name + " DATE, ");
                 } else if (rsmd.getColumnType(i) == Types.DECIMAL) {
-                    sb.append(name + " DECIMAL, ");
+                    sb.append(name + " DECIMAL (15, 2), ");
                 }
             }
             sb1.setLength(sb1.length() - 2);
@@ -190,7 +196,7 @@ public class RunSQL2 {
             tempQuery = sb.toString();
             export = sb1.toString();
 
-            //System.out.println(sb.toString());
+            //System.out.println(tempQuery);
             conn.close();
 
             Class.forName(tt2.get(0)).newInstance();
@@ -221,9 +227,9 @@ public class RunSQL2 {
                 } else if (rsmd.getColumnType(i) == Types.VARCHAR) {
                     sb2.append(name1 + " VARCHAR(128), ");
                 } else if (rsmd.getColumnType(i) == Types.DATE) {
-                    sb2.append(name1 + " DATETIME, ");
+                    sb2.append(name1 + " DATE, ");
                 } else if (rsmd.getColumnType(i) == Types.DECIMAL) {
-                    sb2.append(name1 + " DECIMAL, ");
+                    sb2.append(name1 + " DECIMAL (15, 2), ");
                 }
             }
             sb3.setLength(sb3.length() - 2);

@@ -1,0 +1,15 @@
+#! /bin/bash
+
+alias mysql="/usr/local/mysql/bin/mysql"
+alias mysqladmin="/usr/local/mysql/bin/mysql"
+
+mysqladmin -u root -p$1 -e "DROP DATABASE IF EXISTS mzou1"
+mysqladmin -u root -p$1 -e "CREATE DATABASE mzou1"
+mysqladmin -u root -p$1 -e "DROP DATABASE IF EXISTS mzou2"
+mysqladmin -u root -p$1 -e "CREATE DATABASE mzou2"
+mysqladmin -u root -p$1 -e "DROP DATABASE IF EXISTS mzou3"
+mysqladmin -u root -p$1 -e "CREATE DATABASE mzou3"
+
+mysql -u root -p$1 mzou1 < ./test3-mzou/test3-mzou-1.pre.sql
+mysql -u root -p$1 mzou2 < ./test3-mzou/test3-mzou-2.pre.sql
+mysql -u root -p$1 mzou3 < ./test3-mzou/test3-mzou-2.pre.sql

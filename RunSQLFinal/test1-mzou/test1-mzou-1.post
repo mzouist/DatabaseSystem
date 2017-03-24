@@ -1,0 +1,3 @@
+#! /bin/bash
+
+mysqladmin -u root -p$1 -D mzou1 -e "SELECT * FROM DTABLES"

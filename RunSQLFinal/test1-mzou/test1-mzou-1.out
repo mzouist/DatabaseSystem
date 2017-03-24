@@ -1,0 +1,3 @@
+[jdbc:mysql://localhost:3306/mzou1]: catalog updated.
+[jdbc:mysql://localhost:3306/mzou2]: ./test1-mzou/ddlfile.sql success.
+[jdbc:mysql://localhost:3306/mzou3]: ./test1-mzou/ddlfile.sql success.

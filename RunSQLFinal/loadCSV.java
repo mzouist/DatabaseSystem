@@ -21,7 +21,7 @@ public class loadCSV {
 
     public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
         for (int i = 0; i < args.length; i++) {
-            System.out.println(args[i]);
+            //System.out.println(args[i]);
         }
         Connection conn;
         loadCSV run = new loadCSV();
@@ -33,7 +33,7 @@ public class loadCSV {
             try {
                 Class.forName(driver).newInstance();
                 conn = DriverManager.getConnection(connUrl + "?verifyServerCertificate=false&useSSL=true", connUser, connPwd);
-                String query = "SELECT * FROM DTABLES WHERE PARTMTD = 1" +  " AND TNAME = '" + partitionTable +"'";
+                String query = "SELECT * FROM DTABLES WHERE PARTMTD = 1" + " AND TNAME = '" + partitionTable + "'";
                 PreparedStatement statement = conn
                         .prepareStatement(query);
                 resultSet = statement.executeQuery();
@@ -52,6 +52,7 @@ public class loadCSV {
                     thread[numThread] = new Thread(new Runnable() {
                         @Override
                         public void run() {
+                            int insertCount = 0;
                             try {
                                 Connection newConn;
                                 Class.forName(nodeDriver).newInstance();
@@ -104,6 +105,7 @@ public class loadCSV {
                                             //System.out.println(query);
                                             Statement stmt = newConn.createStatement();
                                             stmt.executeUpdate(query);
+                                            insertCount++;
                                         }
                                     } else {
                                         System.err.println("Column size doesn't match with Data size");
@@ -114,6 +116,8 @@ public class loadCSV {
                                 newConn.close();
                             } catch (Exception e) {
                                 e.printStackTrace();
+                            } finally {
+                                System.out.println("[" + nodeUrl + "]: " + insertCount + " RECORD(S) HAS INSERTED.");
                             }
                         }
                     });
@@ -155,6 +159,7 @@ public class loadCSV {
                     thread2[numThread] = new Thread(new Runnable() {
                         @Override
                         public void run() {
+                            int insertCount = 0;
                             try {
                                 Connection newConn;
                                 Class.forName(nodeDriver).newInstance();
@@ -206,6 +211,7 @@ public class loadCSV {
                                             //System.out.println(nodeId + ": " + "order_key: " + dataArray[0]);
                                             Statement stmt = newConn.createStatement();
                                             stmt.executeUpdate(query);
+                                            insertCount++;
                                         }
                                     } else {
                                         System.err.println("Column size doesn't match with Data size");
@@ -214,7 +220,9 @@ public class loadCSV {
                                 statement.close();
                                 newConn.close();
                             } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NumberFormatException | SQLException e) {
-                                System.err.println("215 "+e.getMessage());
+                                System.err.println("215 " + e.getMessage());
+                            } finally {
+                                System.out.println("[" + nodeUrl + "]: " + insertCount + " RECORD(S) HAS INSERTED.");
                             }
                         }
                     });
@@ -222,7 +230,7 @@ public class loadCSV {
                     numThread++;
                 }
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NumberFormatException | SQLException e) {
-                System.err.println("223 "+e.getMessage());
+                System.err.println("223 " + e.getMessage());
             }
         }
     }
@@ -290,7 +298,7 @@ public class loadCSV {
                 line = line.substring(line.lastIndexOf('=') + 1).trim();
                 nthreads = Integer.parseInt(line);
             }
-            
+
             if (line.startsWith("tablename")) {
                 line = line.substring(line.lastIndexOf('=') + 1).trim();
                 partitionTable = line;
@@ -308,15 +316,15 @@ public class loadCSV {
                         conn = DriverManager.getConnection(this.connUrl + "?verifyServerCertificate=false&useSSL=true", this.connUser, this.connPwd);
                         String query;
                         if (line.compareToIgnoreCase("range") == 0) {
-                            query = "UPDATE DTABLES SET PARTMTD = 1 WHERE NODEURL != '" + catalogHostname + "' AND TNAME = '" + partitionTable +"'";
+                            query = "UPDATE DTABLES SET PARTMTD = 1 WHERE NODEURL != '" + catalogHostname + "' AND TNAME = '" + partitionTable + "'";
                             partitionMethod = "range";
                             //System.out.println(query);
                         } else if (line.compareToIgnoreCase("hash") == 0) {
-                            query = "UPDATE DTABLES SET PARTMTD = 2 WHERE NODEURL != '" + catalogHostname + "' AND TNAME = '" + partitionTable +"'";
+                            query = "UPDATE DTABLES SET PARTMTD = 2 WHERE NODEURL != '" + catalogHostname + "' AND TNAME = '" + partitionTable + "'";
                             partitionMethod = "hash";
                             //System.out.println(query);
                         } else {
-                            query = "UPDATE DTABLES SET PARTMTD = 0 WHERE NODEURL != '" + catalogHostname + "' AND TNAME = '" + partitionTable +"'";
+                            query = "UPDATE DTABLES SET PARTMTD = 0 WHERE NODEURL != '" + catalogHostname + "' AND TNAME = '" + partitionTable + "'";
                             partitionMethod = "none";
                             //System.out.println(query);
                         }
@@ -324,16 +332,16 @@ public class loadCSV {
                         stmt = conn.createStatement();
                         stmt.executeUpdate(query);
                         conn.close();
-                    } catch ( Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
-                    } 
+                    }
 
                 } else if (type.compareToIgnoreCase("column") == 0) {
                     line = line.substring(line.lastIndexOf('=') + 1).trim();
                     try {
                         Class.forName(catalogDriver).newInstance();
                         conn = DriverManager.getConnection(catalogHostname + "?verifyServerCertificate=false&useSSL=true", catalogUsername, catalogPasswd);
-                        String query = "UPDATE DTABLES SET PARTCOL = '" + line + "' WHERE NODEURL != '" + catalogHostname +  "' AND TNAME = '" + partitionTable +"'";;
+                        String query = "UPDATE DTABLES SET PARTCOL = '" + line + "' WHERE NODEURL != '" + catalogHostname + "' AND TNAME = '" + partitionTable + "'";;
                         //System.out.println(query);
                         partitionCol = line;
                         Statement stmt;
@@ -353,8 +361,8 @@ public class loadCSV {
                         param = param.substring(5, param.indexOf("="));
                         String parmaCnt = line.substring(line.lastIndexOf('=') + 1).trim();
                         int intNode = Integer.parseInt(node) + 1;
-                        
-                        String query = "UPDATE DTABLES SET PARTPARAM" + param + " = '" + parmaCnt + "' WHERE NODEID = " + intNode +  " AND TNAME = '" + partitionTable +"'"; // MYSQL STARTS INDEX AT 1
+
+                        String query = "UPDATE DTABLES SET PARTPARAM" + param + " = '" + parmaCnt + "' WHERE NODEID = " + intNode + " AND TNAME = '" + partitionTable + "'"; // MYSQL STARTS INDEX AT 1
                         //System.out.println(query);
                         try {
                             Class.forName(catalogDriver).newInstance();
@@ -363,7 +371,7 @@ public class loadCSV {
                             stmt = conn.createStatement();
                             stmt.executeUpdate(query);
                             conn.close();
-                        }  catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -373,7 +381,7 @@ public class loadCSV {
                         param = param.substring(param.lastIndexOf(".") + 1);
                         param = param.substring(5, param.indexOf("="));
                         String parmaCnt = line.substring(line.lastIndexOf('=') + 1).trim();
-                        String query = "UPDATE DTABLES SET PARTPARAM" + param + " = '" + parmaCnt + "' WHERE NODEID != 1 AND TNAME = '" + partitionTable +"'";
+                        String query = "UPDATE DTABLES SET PARTPARAM" + param + " = '" + parmaCnt + "' WHERE NODEID != 1 AND TNAME = '" + partitionTable + "'";
                         try {
                             Class.forName(catalogDriver).newInstance();
                             conn = DriverManager.getConnection(catalogHostname + "?verifyServerCertificate=false&useSSL=true", catalogUsername, catalogPasswd);
@@ -381,7 +389,7 @@ public class loadCSV {
                             stmt = conn.createStatement();
                             stmt.executeUpdate(query);
                             //System.out.println(query);
-                            query = "UPDATE DTABLES SET PARTPARAM2 = null WHERE NODEID != 1 AND TNAME = '" + partitionTable +"'";
+                            query = "UPDATE DTABLES SET PARTPARAM2 = null WHERE NODEID != 1 AND TNAME = '" + partitionTable + "'";
                             //System.out.println(query);
                             stmt.executeUpdate(query);
                             conn.close();

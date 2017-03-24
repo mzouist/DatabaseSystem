@@ -1,0 +1,4 @@
+BOOKS	com.mysql.jdbc.Driver	jdbc:mysql://localhost:3306/mzou2	mzou	password	NULL	2	NULL	NULL	NULL
+BOOKS	com.mysql.jdbc.Driver	jdbc:mysql://localhost:3306/mzou3	mzou	password	NULL	3	NULL	NULL	NULL
+NULL	com.mysql.jdbc.Driver	jdbc:mysql://localhost:3306/mzou1	mzou	password	NULL	1	NULL	NULL	NULL
+tname	nodedriver	nodeurl	nodeuser	nodepasswd	partmtd	nodeid	partcol	partparam1	partparam2

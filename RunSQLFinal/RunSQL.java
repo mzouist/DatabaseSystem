@@ -105,7 +105,7 @@ public class RunSQL {
         for (int i = 0; i < nthreads; i++) {
             threads[i].join();
         }
-        System.out.println("[" + connUrl + "]: " + args[1] + " " + status + ".");
+        //System.out.println("[" + connUrl + "]: " + args[1] + " " + status + ".");
     }
 
     public void getClusterNodes() {
